@@ -1,0 +1,98 @@
+# ==========================
+# Java / Backend
+# ==========================
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+logs/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle
+.gradle/
+build/
+**/build/
+gradlew
+gradlew.bat
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+bin/
+
+# IntelliJ IDEA
+.idea/
+**/.idea/
+*.iws
+*.iml
+*.ipr
+out/
+**/out/
+
+# NetBeans
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ==========================
+# Node / Frontend
+# ==========================
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.output/
+.nuxt/
+coverage/
+.nyc_output/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ==========================
+# System / OS
+# ==========================
+.DS_Store
+**/.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ==========================
+# Editors / Tools
+# ==========================
+.vscode/
+**/.vscode/
+*.sublime-workspace
+.history/
+
+# ==========================
+# Agent / AI / Temporary
+# ==========================
+.agent/
+.gemini/
+.shared/
+.playwright-mcp/
+tmp/
+temp/
+*.swp
+*.swo
