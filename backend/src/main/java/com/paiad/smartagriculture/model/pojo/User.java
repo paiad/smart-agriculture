@@ -8,6 +8,10 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 用户信息实体类
+ * 用于存储系统用户的账号、密码、联系方式等信息
+ */
 @Data
 @TableName("pure_user")
 public class User implements Serializable {

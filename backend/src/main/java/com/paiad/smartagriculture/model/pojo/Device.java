@@ -6,6 +6,10 @@ import lombok.Data;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * 设备信息实体类
+ * 用于存储设备的唯一标识、类型、名称、状态等基础信息
+ */
 @Data
 @TableName("device")
 public class Device implements Serializable {

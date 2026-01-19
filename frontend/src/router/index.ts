@@ -4,20 +4,42 @@ import type { RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: () => import('@/layouts/DefaultLayout.vue'),
+    component: () => import('@/layouts/DashboardLayout.vue'),
     children: [
       {
         path: '',
-        name: 'Home',
-        component: () => import('@/views/Home.vue'),
-        meta: { title: 'Home' }
+        redirect: '/monitor'
       },
       {
-        path: 'about',
-        name: 'About',
-        component: () => import('@/views/About.vue'),
-        meta: { title: 'About' }
-      }
+        path: 'monitor',
+        name: 'Monitor',
+        component: () => import('@/views/monitor/RealTimeMonitor.vue'),
+        meta: { title: '实时监控' }
+      },
+      {
+        path: 'control',
+        name: 'DeviceControl',
+        component: () => import('@/views/control/DeviceControl.vue'),
+        meta: { title: '设备控制' }
+      },
+      {
+        path: 'alarm',
+        name: 'AlarmCenter',
+        component: () => import('@/views/alarm/AlarmCenter.vue'),
+        meta: { title: '告警中心' }
+      },
+      {
+        path: 'rule',
+        name: 'AlarmRuleConfig',
+        component: () => import('@/views/rule/AlarmRuleConfig.vue'),
+        meta: { title: '规则配置' }
+      },
+      {
+        path: 'device',
+        name: 'DeviceList',
+        component: () => import('@/views/device/DeviceList.vue'),
+        meta: { title: '设备管理' }
+      },
     ]
   },
   {

@@ -7,6 +7,10 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 环境数据实体类
+ * 用于存储传感器上报的环境监测数据（如温度、湿度、PH值等）
+ */
 @Data
 @TableName("env_data")
 public class EnvData implements Serializable {

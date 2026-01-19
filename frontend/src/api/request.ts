@@ -35,11 +35,18 @@ request.interceptors.response.use(
   (response: AxiosResponse<ApiResult>) => {
     const { code, msg, data } = response.data
     
+    // Standard ApiResult success
     if (code === 200) {
       return data as any
     }
+
+    // Support raw response (no wrapper)
+    // If code is undefined and http status is 200, assume success and return full data
+    if (code === undefined && response.status === 200) {
+      return response.data as any
+    }
     
-    // 业务错误
+    // Business error or failure
     ElMessage.error(msg || '请求失败')
     return Promise.reject(new Error(msg))
   },

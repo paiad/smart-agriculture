@@ -7,6 +7,10 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 告警记录实体类
+ * 用于存储触发告警时的详细信息（对应设备、触发值、报警消息等）
+ */
 @Data
 @TableName("alarm")
 public class Alarm implements Serializable {

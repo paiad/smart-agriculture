@@ -1,5 +1,7 @@
 package com.paiad.smartagriculture.service;
 
+import cn.hutool.json.JSONUtil;
+import com.paiad.smartagriculture.model.pojo.EnvData;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
@@ -13,12 +15,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @Slf4j
 public class MqttService implements MqttCallback {
 
     @Autowired
     private MqttClient mqttClient;
+
+    @Autowired
+    private EnvDataService envDataService;
 
     @Value("${mqtt.pub-topic}")
     private String pubTopic;
@@ -68,7 +75,30 @@ public class MqttService implements MqttCallback {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        log.info("Message arrived on topic {}: {}", topic, new String(message.getPayload()));
+        String payload = new String(message.getPayload());
+        log.info("Message arrived on topic {}: {}", topic, payload);
+
+        try {
+            // Parse JSON using Hutool
+            EnvData envData = JSONUtil.toBean(payload, EnvData.class);
+
+            if (envData != null) {
+                // If deviceId is present, process it
+                if (envData.getDeviceId() != null) {
+                    // Set raw payload
+                    envData.setRawPayload(payload);
+                    // Ensure timestamp
+                    if (envData.getTs() == null) {
+                        envData.setTs(LocalDateTime.now());
+                    }
+                    envDataService.processAndSave(envData);
+                } else {
+                    log.warn("Received MQTT message without deviceId: {}", payload);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to process MQTT message payload", e);
+        }
     }
 
     @Override

@@ -7,6 +7,10 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 告警规则实体类
+ * 用于定义数据异常的判断标准（监测指标、阈值范围等）
+ */
 @Data
 @TableName("alarm_rule")
 public class AlarmRule implements Serializable {
