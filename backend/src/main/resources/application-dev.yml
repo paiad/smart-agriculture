@@ -36,3 +36,12 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+
+# MQTT
+mqtt:
+  broker-url: tcp://localhost:1883
+  client-id: smart-agriculture-backend
+  username:
+  password:
+  pub-topic: smart-agriculture/pub
+  sub-topic: smart-agriculture/sub
