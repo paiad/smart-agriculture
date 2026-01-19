@@ -7,9 +7,13 @@ export interface LoginParams {
 
 export interface UserInfo {
   id: number
+  username: string
   phone: string
   nickname: string
-  avatar?: string
+  avatar: string
+  identity: string
+  openid?: string
+  createTime: string
 }
 
 export const userApi = {

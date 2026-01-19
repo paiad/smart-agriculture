@@ -23,7 +23,7 @@
         ref="loginFormRef"
         label-position="top"
         size="large"
-        class="space-y-6"
+        class="space-y-4"
         v-if="!isRegister"
       >
         <el-form-item prop="phone" class="!mb-0">
@@ -60,7 +60,7 @@
           </el-button>
         </el-form-item>
         
-        <div class="text-center mt-8">
+        <div class="text-center mt-6">
            <p class="text-[#86868B] text-sm">
              还没有账号？ 
              <a href="#" @click.prevent="toggleMode" class="text-[#0066CC] hover:underline ml-1 font-medium">立即注册</a>
@@ -76,7 +76,7 @@
         ref="loginFormRef"
         label-position="top"
         size="large"
-        class="space-y-6"
+        class="space-y-4"
       >
         <el-form-item prop="phone" class="!mb-0">
           <el-input
@@ -96,7 +96,7 @@
           />
         </el-form-item>
 
-        <el-form-item prop="confirmPassword" class="!mb-8">
+        <el-form-item prop="confirmPassword" class="!mb-6">
           <el-input
             v-model="registerForm.confirmPassword"
             type="password"
@@ -117,7 +117,7 @@
           </el-button>
         </el-form-item>
 
-        <div class="text-center mt-8">
+        <div class="text-center mt-6">
            <p class="text-[#86868B] text-sm">
              已有账号？ 
              <a href="#" @click.prevent="toggleMode" class="text-[#0066CC] hover:underline ml-1 font-medium">返回登录</a>
@@ -152,8 +152,8 @@ const rememberMe = ref(false)
 const isRegister = ref(false)
 
 const loginForm = reactive({
-  phone: '',
-  password: ''
+  phone: '15226068298',
+  password: '123456'
 })
 
 const registerForm = reactive({

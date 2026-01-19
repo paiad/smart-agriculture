@@ -48,4 +48,8 @@ export default defineConfig({
     'sidebar-item': 'flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all cursor-pointer',
     'sidebar-item-active': 'bg-brand-50 text-brand-600 font-medium',
   },
+  safelist: [
+    'i-solar-home-smile-linear',
+    'i-solar-info-circle-linear',
+  ],
 })

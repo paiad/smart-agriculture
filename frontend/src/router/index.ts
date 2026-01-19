@@ -10,13 +10,13 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Home',
         component: () => import('@/views/Home.vue'),
-        meta: { title: '首页' }
+        meta: { title: 'Home' }
       },
       {
         path: 'about',
         name: 'About',
         component: () => import('@/views/About.vue'),
-        meta: { title: '关于' }
+        meta: { title: 'About' }
       }
     ]
   },
@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
-    meta: { title: '登录' }
+    meta: { title: 'Login' }
   }
 ]
 
@@ -35,7 +35,7 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, _from, next) => {
-  document.title = `${to.meta.title || '智慧农业'} - SmartAgriculture`
+  document.title = `${to.meta.title || '首页'} - 智慧农业平台`
   next()
 })
 
