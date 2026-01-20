@@ -1,6 +1,7 @@
 package com.paiad.smartagriculture.model.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,23 +19,28 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName("device")
+@Schema(description = "设备信息实体")
 public class Device implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
+    @Schema(description = "主键ID", hidden = true)
     private Long id;
 
     /**
      * 设备业务唯一ID(来自硬件/网关)
      */
+    @Schema(description = "设备唯一编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "SENSOR001")
     private String deviceId;
 
     /**
      * 设备类型:SENSOR_7IN1/WEATHER_STATION/FAN/PUMP等
      */
+    @Schema(description = "设备类型", example = "SENSOR_7IN1")
     private String deviceType;
 
     /**
      * 设备名称
      */
+    @Schema(description = "设备名称", example = "一号大棚温湿度传感器")
     private String name;
 
     /**
@@ -50,11 +56,13 @@ public class Device implements Serializable {
     /**
      * 状态:0停用 1启用 2故障 3维护
      */
+    @Schema(description = "状态: 0停用 1启用 2故障 3维护", example = "1")
     private Integer status;
 
     /**
      * 在线快照:0离线 1在线
      */
+    @Schema(description = "在线状态: 0离线 1在线", accessMode = Schema.AccessMode.READ_ONLY)
     private Integer online;
 
     /**

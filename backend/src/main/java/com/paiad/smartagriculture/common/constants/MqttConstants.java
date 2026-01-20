@@ -22,4 +22,9 @@ public final class MqttConstants {
      * 设备控制指令 Topic 前缀
      */
     public static final String TOPIC_CMD = TOPIC_PREFIX + "cmd/";
+
+    /**
+     * 设备指令确认 Topic 前缀
+     */
+    public static final String TOPIC_ACK = TOPIC_PREFIX + "ack/";
 }

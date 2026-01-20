@@ -23,8 +23,16 @@ public class OpenApiConfig {
     @Bean
     public GroupedOpenApi userApi() {
         return GroupedOpenApi.builder()
-                .group("用户接口")
+                .group("用户模块")
                 .pathsToMatch("/user/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi businessApi() {
+        return GroupedOpenApi.builder()
+                .group("业务模块")
+                .pathsToMatch("/device/**", "/env-data/**", "/control-command/**", "/alarm/**", "/alarm-rule/**")
                 .build();
     }
 }

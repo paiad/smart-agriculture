@@ -46,3 +46,4 @@ mqtt:
   password:
   pub-topic: smart-agri/cmd
   sub-topic: smart-agri/data/+
+  ack-topic: smart-agri/ack/+

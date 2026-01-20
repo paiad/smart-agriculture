@@ -8,4 +8,15 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> implements DeviceService {
+    @Override
+    public void updateHeartbeat(String deviceId) {
+        if (deviceId == null) {
+            return;
+        }
+        lambdaUpdate()
+                .eq(Device::getDeviceId, deviceId)
+                .set(Device::getLastSeenAt, java.time.LocalDateTime.now())
+                .set(Device::getOnline, 1)
+                .update();
+    }
 }

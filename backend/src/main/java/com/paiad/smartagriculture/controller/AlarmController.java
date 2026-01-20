@@ -6,17 +6,22 @@ import com.paiad.smartagriculture.model.pojo.Alarm;
 import com.paiad.smartagriculture.service.AlarmService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/alarm")
 @Slf4j
+@Tag(name = "告警管理接口")
 public class AlarmController {
 
     @Autowired
     private AlarmService alarmService;
 
     @GetMapping("/page")
+    @Operation(summary = "分页查询告警记录")
     public Page<Alarm> page(@RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Integer status) {
@@ -29,6 +34,7 @@ public class AlarmController {
     }
 
     @PutMapping("/{id}/status")
+    @Operation(summary = "更新告警状态")
     public boolean updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         Alarm alarm = Alarm.builder()
                 .id(id)
