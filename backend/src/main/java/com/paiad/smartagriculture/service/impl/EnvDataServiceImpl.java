@@ -1,7 +1,10 @@
 package com.paiad.smartagriculture.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.paiad.smartagriculture.common.constants.MetricConstants;
+import com.paiad.smartagriculture.common.constants.RedisConstants;
 import com.paiad.smartagriculture.mapper.EnvDataMapper;
 import com.paiad.smartagriculture.model.pojo.Alarm;
 import com.paiad.smartagriculture.model.pojo.AlarmRule;
@@ -13,14 +16,14 @@ import com.paiad.smartagriculture.service.DeviceService;
 import com.paiad.smartagriculture.service.EnvDataService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,6 +37,9 @@ public class EnvDataServiceImpl extends ServiceImpl<EnvDataMapper, EnvData> impl
 
     @Autowired
     private AlarmService alarmService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -55,30 +61,41 @@ public class EnvDataServiceImpl extends ServiceImpl<EnvDataMapper, EnvData> impl
             return;
         }
 
-        // 查找匹配规则
-        // 规则：启用状态 且 (匹配特定设备ID 或 全局规则(设备ID为空))
-        List<AlarmRule> rules = alarmRuleService.list(new LambdaQueryWrapper<AlarmRule>()
-                .eq(AlarmRule::getEnabled, 1)
-                .and(w -> w.eq(AlarmRule::getDeviceId, device.getDeviceId())
-                        .or(o -> o.isNull(AlarmRule::getDeviceId))));
+        // 1. 优先从 Redis 获取所有启用的规则
+        List<AlarmRule> allEnabledRules;
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(RedisConstants.ALARM_RULES_KEY);
+        if (entries != null && !entries.isEmpty()) {
+            log.info("Alarm rule cache hit, count: {}", entries.size());
+            allEnabledRules = entries.values().stream()
+                    .map(obj -> JSONUtil.toBean((String) obj, AlarmRule.class))
+                    .collect(Collectors.toList());
+        } else {
+            // 缓存失效，回源并重填
+            log.info("Alarm rule cache miss, fallback to database");
+            alarmRuleService.reloadCache();
+            allEnabledRules = alarmRuleService.list(new LambdaQueryWrapper<AlarmRule>().eq(AlarmRule::getEnabled, 1));
+        }
 
-        // 按指标分组并优先考虑特定规则（deviceId 不为空）
+        // 2. 筛选匹配特定设备ID 或 全局规则(设备ID为空) 的规则
+        List<AlarmRule> relevantRules = allEnabledRules.stream()
+                .filter(r -> r.getDeviceId() == null || r.getDeviceId().equals(device.getDeviceId()))
+                .collect(Collectors.toList());
+
+        // 3. 按指标分组并优先考虑特定规则（deviceId 不为空）
         Map<String, AlarmRule> effectiveRules = new HashMap<>();
-        for (AlarmRule rule : rules) {
+        for (AlarmRule rule : relevantRules) {
             String metric = rule.getMetric();
             if (!effectiveRules.containsKey(metric)) {
                 effectiveRules.put(metric, rule);
             } else {
-                // 如果现有规则是通用的（deviceId为空）且当前规则是特定的（deviceId不为空），则覆盖它
                 AlarmRule existing = effectiveRules.get(metric);
                 if (existing.getDeviceId() == null && rule.getDeviceId() != null) {
                     effectiveRules.put(metric, rule);
                 }
-                // 如果现有规则是特定的，则保留（忽略通用规则或重复的特定规则 - 简化处理）
             }
         }
 
-        // 执行有效规则
+        // 4. 执行有效规则
         for (AlarmRule rule : effectiveRules.values()) {
             checkRule(envData, rule, device);
         }
@@ -111,17 +128,18 @@ public class EnvDataServiceImpl extends ServiceImpl<EnvDataMapper, EnvData> impl
     }
 
     private void createAlarm(EnvData envData, AlarmRule rule, BigDecimal value, String message) {
-        Alarm alarm = new Alarm();
-        alarm.setDeviceId(envData.getDeviceId());
-        alarm.setMetric(rule.getMetric());
-        alarm.setValue(value);
-        alarm.setMinValue(rule.getMinValue());
-        alarm.setMaxValue(rule.getMaxValue());
-        alarm.setLevel(rule.getLevel());
-        alarm.setStatus(0); // 0: 未确认
-        alarm.setTriggeredAt(envData.getTs() != null ? envData.getTs() : LocalDateTime.now());
-        alarm.setMessage(message);
-        alarm.setRuleId(rule.getId());
+        Alarm alarm = Alarm.builder()
+                .deviceId(envData.getDeviceId())
+                .metric(rule.getMetric())
+                .value(value)
+                .minValue(rule.getMinValue())
+                .maxValue(rule.getMaxValue())
+                .level(rule.getLevel())
+                .status(0) // 0: 未确认
+                .triggeredAt(envData.getTs() != null ? envData.getTs() : LocalDateTime.now())
+                .message(message)
+                .ruleId(rule.getId())
+                .build();
 
         alarmService.save(alarm);
         log.info("Alarm generated: {}", message);
@@ -131,37 +149,37 @@ public class EnvDataServiceImpl extends ServiceImpl<EnvDataMapper, EnvData> impl
         if (metric == null)
             return null;
         switch (metric) {
-            case "sHR":
+            case MetricConstants.SOIL_HUMIDITY:
                 return data.getSoilHumidity();
-            case "sEC":
+            case MetricConstants.SOIL_EC:
                 return data.getSoilEc();
-            case "sPH":
+            case MetricConstants.SOIL_PH:
                 return data.getSoilPh();
-            case "CO2":
+            case MetricConstants.CO2:
                 return data.getCo2();
-            case "NN":
+            case MetricConstants.NITROGEN:
                 return data.getNitrogen();
-            case "PP":
+            case MetricConstants.PHOSPHORUS:
                 return data.getPhosphorus();
-            case "sTMP":
+            case MetricConstants.SOIL_TEMP:
                 return data.getSoilTemp();
-            case "KK":
+            case MetricConstants.POTASSIUM:
                 return data.getPotassium();
-            case "ILL":
+            case MetricConstants.ILLUMINANCE:
                 return data.getIlluminance();
-            case "HR":
+            case MetricConstants.HUMIDITY:
                 return data.getHumidity();
-            case "FS":
+            case MetricConstants.WIND_SPEED:
                 return data.getWindSpeed();
-            case "TMP":
+            case MetricConstants.TEMPERATURE:
                 return data.getTemperature();
-            case "PRS":
+            case MetricConstants.PRESSURE:
                 return data.getPressure();
-            case "RVC":
+            case MetricConstants.RAINFALL:
                 return data.getRainfall();
             // 字符串类型或不支持的类型在数值检查时返回 null
-            case "FX":
-            case "YX":
+            case MetricConstants.WIND_DIR:
+            case MetricConstants.PRECIP:
             default:
                 return null;
         }

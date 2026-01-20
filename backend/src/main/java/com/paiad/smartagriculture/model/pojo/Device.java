@@ -1,7 +1,10 @@
 package com.paiad.smartagriculture.model.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -11,6 +14,9 @@ import java.time.LocalDateTime;
  * 用于存储设备的唯一标识、类型、名称、状态等基础信息
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("device")
 public class Device implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)

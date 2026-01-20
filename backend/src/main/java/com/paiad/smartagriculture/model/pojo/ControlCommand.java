@@ -1,7 +1,10 @@
 package com.paiad.smartagriculture.model.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -11,6 +14,9 @@ import java.time.LocalDateTime;
  * 用于存储向设备下发的控制指令及其执行状态（待发送、已发送、成功、失败等）
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("control_command")
 public class ControlCommand implements Serializable {
 

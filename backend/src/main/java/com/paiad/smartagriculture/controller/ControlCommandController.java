@@ -2,6 +2,7 @@ package com.paiad.smartagriculture.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.paiad.smartagriculture.common.constants.MqttConstants;
 import com.paiad.smartagriculture.model.pojo.ControlCommand;
 import com.paiad.smartagriculture.service.ControlCommandService;
 import com.paiad.smartagriculture.service.MqttService;
@@ -37,18 +38,22 @@ public class ControlCommandController {
 
     @PostMapping("/send")
     public boolean send(@RequestBody ControlCommand command) {
-        // 1. Prepare command
-        command.setRequestId(IdUtil.fastSimpleUUID());
-        command.setStatus(1); // 1: Sent (assuming Mqtt send is instant otherwise should be 0 then 1)
-        command.setSentAt(LocalDateTime.now());
+        // 1. Prepare command with Builder
+        ControlCommand commandToSend = ControlCommand.builder()
+                .deviceId(command.getDeviceId())
+                .command(command.getCommand())
+                .params(command.getParams())
+                .requestId(IdUtil.fastSimpleUUID())
+                .status(1) // 1: Sent
+                .sentAt(LocalDateTime.now())
+                .build();
 
         // 2. Publish MQTT
-        // Topic: smart-agriculture/cmd/{deviceId}
-        String topic = "smart-agriculture/cmd/" + command.getDeviceId();
-        String payload = cn.hutool.json.JSONUtil.toJsonStr(command);
+        String topic = MqttConstants.TOPIC_CMD + commandToSend.getDeviceId();
+        String payload = cn.hutool.json.JSONUtil.toJsonStr(commandToSend);
         mqttService.publish(topic, payload);
 
         // 3. Save record
-        return controlCommandService.save(command);
+        return controlCommandService.save(commandToSend);
     }
 }

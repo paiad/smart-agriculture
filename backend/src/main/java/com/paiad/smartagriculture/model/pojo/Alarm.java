@@ -1,7 +1,10 @@
 package com.paiad.smartagriculture.model.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -12,6 +15,9 @@ import java.time.LocalDateTime;
  * 用于存储触发告警时的详细信息（对应设备、触发值、报警消息等）
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("alarm")
 public class Alarm implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)

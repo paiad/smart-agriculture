@@ -1,7 +1,10 @@
 package com.paiad.smartagriculture.model.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -12,6 +15,9 @@ import java.time.LocalDateTime;
  * 用于定义数据异常的判断标准（监测指标、阈值范围等）
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("alarm_rule")
 public class AlarmRule implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)

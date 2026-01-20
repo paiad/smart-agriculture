@@ -1,6 +1,8 @@
 package com.paiad.smartagriculture.service;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.paiad.smartagriculture.model.pojo.Device;
 import com.paiad.smartagriculture.model.pojo.EnvData;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,9 @@ public class MqttService implements MqttCallback {
 
     @Autowired
     private EnvDataService envDataService;
+
+    @Autowired
+    private DeviceService deviceService;
 
     @Value("${mqtt.pub-topic}")
     private String pubTopic;
@@ -79,23 +84,45 @@ public class MqttService implements MqttCallback {
         log.info("Message arrived on topic {}: {}", topic, payload);
 
         try {
-            // Parse JSON using Hutool
-            EnvData envData = JSONUtil.toBean(payload, EnvData.class);
-
-            if (envData != null) {
-                // If deviceId is present, process it
-                if (envData.getDeviceId() != null) {
-                    // Set raw payload
-                    envData.setRawPayload(payload);
-                    // Ensure timestamp
-                    if (envData.getTs() == null) {
-                        envData.setTs(LocalDateTime.now());
-                    }
-                    envDataService.processAndSave(envData);
-                } else {
-                    log.warn("Received MQTT message without deviceId: {}", payload);
-                }
+            // 从 topic 解析 deviceId: smart-agriculture/data/{deviceId}
+            String[] topicParts = topic.split("/");
+            if (topicParts.length < 3) {
+                log.warn("Invalid topic format: {}", topic);
+                return;
             }
+            String topicDeviceId = topicParts[topicParts.length - 1];
+
+            // 1. 先解析 JSON（无 IO）
+            EnvData envData = JSONUtil.toBean(payload, EnvData.class);
+            if (envData == null) {
+                log.warn("Failed to parse message payload: {}", payload);
+                return;
+            }
+
+            // 2. 校验 JSON 中的 deviceId 与 topic 是否一致（无 IO）
+            if (envData.getDeviceId() != null && !envData.getDeviceId().equals(topicDeviceId)) {
+                log.warn("deviceId 不一致，拒绝存储: topic={}, payload={}", topicDeviceId, envData.getDeviceId());
+                return;
+            }
+
+            // 3. 校验设备是否已注册（有 IO）
+            Device device = deviceService.getOne(new LambdaQueryWrapper<Device>()
+                    .eq(Device::getDeviceId, topicDeviceId));
+            if (device == null) {
+                log.warn("未注册设备上报数据，忽略: {}", topicDeviceId);
+                return;
+            }
+
+            // 使用 topic 中的 deviceId
+            envData.setDeviceId(topicDeviceId);
+
+            // 设置原始载荷和时间戳
+            envData.setRawPayload(payload);
+            if (envData.getTs() == null) {
+                envData.setTs(LocalDateTime.now());
+            }
+
+            envDataService.processAndSave(envData);
         } catch (Exception e) {
             log.error("Failed to process MQTT message payload", e);
         }

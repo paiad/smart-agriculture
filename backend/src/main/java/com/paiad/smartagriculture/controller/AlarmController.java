@@ -30,9 +30,10 @@ public class AlarmController {
 
     @PutMapping("/{id}/status")
     public boolean updateStatus(@PathVariable Long id, @RequestParam Integer status) {
-        Alarm alarm = new Alarm();
-        alarm.setId(id);
-        alarm.setStatus(status);
+        Alarm alarm = Alarm.builder()
+                .id(id)
+                .status(status)
+                .build();
         return alarmService.updateById(alarm);
     }
 }

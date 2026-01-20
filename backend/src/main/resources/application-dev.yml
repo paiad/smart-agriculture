@@ -21,6 +21,7 @@ spring:
       host: localhost
       port: 6379
       database: 0
+      password: root
 
 # MyBatis-Plus
 mybatis-plus:
@@ -40,8 +41,8 @@ knife4j:
 # MQTT
 mqtt:
   broker-url: tcp://localhost:1883
-  client-id: smart-agriculture-backend
+  client-id: smart-agri-backend
   username:
   password:
-  pub-topic: smart-agriculture/pub
-  sub-topic: smart-agriculture/sub
+  pub-topic: smart-agri/cmd
+  sub-topic: smart-agri/data/+
