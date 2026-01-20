@@ -45,9 +45,9 @@ public class ControlCommand implements Serializable {
     private String params;
 
     /**
-     * 状态:0待发送 1已发送 2成功 3失败
+     * 状态:0待发送 1已发送 2成功 3失败 4超时
      */
-    @Schema(description = "状态: 0=待发送, 1=已发送, 2=成功, 3=失败", accessMode = Schema.AccessMode.READ_ONLY)
+    @Schema(description = "状态: 0=待发送, 1=已发送, 2=成功, 3=失败, 4=超时", accessMode = Schema.AccessMode.READ_ONLY)
     private Integer status;
 
     /**
