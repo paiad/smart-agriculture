@@ -18,6 +18,7 @@ import org.eclipse.paho.mqttv5.common.MqttMessage;
 import org.eclipse.paho.mqttv5.common.packet.MqttProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,7 +27,8 @@ import java.time.LocalDateTime;
 @Slf4j
 public class MqttService implements MqttCallback {
 
-    @Autowired
+    @Autowired(required = false)
+    @Lazy
     private MqttClient mqttClient;
 
     @Autowired
@@ -49,10 +51,25 @@ public class MqttService implements MqttCallback {
 
     @PostConstruct
     public void init() {
+        setupMqttClient();
+    }
+
+    /**
+     * 设置 MQTT Client 回调和订阅
+     * 如果 Client 不可用，会在重连后由 connectComplete 回调触发
+     */
+    private void setupMqttClient() {
+        if (mqttClient == null) {
+            log.warn("MQTT client not available, will setup when connected");
+            return;
+        }
+        if (!mqttClient.isConnected()) {
+            log.warn("MQTT client not connected, will subscribe when connected");
+        }
         mqttClient.setCallback(this);
         subscribe(subTopic);
         subscribe(ackTopic);
-        log.info("Subscribed to data and ack topics");
+        log.info("MQTT callback and subscriptions configured");
     }
 
     public void publish(String content) {
@@ -60,6 +77,10 @@ public class MqttService implements MqttCallback {
     }
 
     public void publish(String topic, String content) {
+        if (mqttClient == null || !mqttClient.isConnected()) {
+            log.error("Cannot publish, MQTT client not connected. Topic: {}", topic);
+            return;
+        }
         try {
             MqttMessage message = new MqttMessage(content.getBytes());
             message.setQos(1);
@@ -71,12 +92,23 @@ public class MqttService implements MqttCallback {
     }
 
     public void subscribe(String topic) {
+        if (mqttClient == null || !mqttClient.isConnected()) {
+            log.warn("Cannot subscribe, MQTT client not connected. Topic: {}", topic);
+            return;
+        }
         try {
             mqttClient.subscribe(topic, 1);
             log.info("Subscribed to topic: {}", topic);
         } catch (MqttException e) {
             log.error("Failed to subscribe to topic {}: {}", topic, e.getMessage());
         }
+    }
+
+    /**
+     * 检查 MQTT 是否可用
+     */
+    public boolean isConnected() {
+        return mqttClient != null && mqttClient.isConnected();
     }
 
     @Override

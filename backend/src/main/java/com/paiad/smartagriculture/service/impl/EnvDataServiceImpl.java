@@ -128,6 +128,18 @@ public class EnvDataServiceImpl extends ServiceImpl<EnvDataMapper, EnvData> impl
     }
 
     private void createAlarm(EnvData envData, AlarmRule rule, BigDecimal value, String message) {
+        // 告警抑制检查：5分钟内同设备同指标不重复告警
+        String suppressionKey = RedisConstants.ALARM_SUPPRESSION_PREFIX
+                + envData.getDeviceId() + ":" + rule.getMetric();
+
+        Boolean exists = redisTemplate.hasKey(suppressionKey);
+        if (Boolean.TRUE.equals(exists)) {
+            log.debug("Alarm suppressed for device={}, metric={} (within suppression window)",
+                    envData.getDeviceId(), rule.getMetric());
+            return;
+        }
+
+        // 创建告警记录
         Alarm alarm = Alarm.builder()
                 .deviceId(envData.getDeviceId())
                 .metric(rule.getMetric())
@@ -142,7 +154,13 @@ public class EnvDataServiceImpl extends ServiceImpl<EnvDataMapper, EnvData> impl
                 .build();
 
         alarmService.save(alarm);
-        log.info("Alarm generated: {}", message);
+
+        // 设置抑制标记，5分钟后过期
+        redisTemplate.opsForValue().set(suppressionKey, "1",
+                java.time.Duration.ofMinutes(RedisConstants.ALARM_SUPPRESSION_TTL_MINUTES));
+
+        log.info("Alarm generated: {} (suppression set for {} minutes)",
+                message, RedisConstants.ALARM_SUPPRESSION_TTL_MINUTES);
     }
 
     private BigDecimal getValueByMetric(EnvData data, String metric) {

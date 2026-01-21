@@ -22,4 +22,15 @@ public final class RedisConstants {
      * 告警规则缓存 TTL（小时）
      */
     public static final long ALARM_RULES_TTL_HOURS = 1;
+
+    /**
+     * 告警抑制 Key 前缀: smart-agri:alarm:suppression:{deviceId}:{metric}
+     */
+    public static final String ALARM_SUPPRESSION_PREFIX = KEY_PREFIX + "alarm:suppression:";
+
+    /**
+     * 告警抑制窗口 TTL（分钟）
+     * 同设备同指标在此时间内不重复生成告警
+     */
+    public static final long ALARM_SUPPRESSION_TTL_MINUTES = 5;
 }

@@ -1,5 +1,6 @@
 package com.paiad.smartagriculture.task;
 
+import com.paiad.smartagriculture.common.constants.CommandConstants;
 import com.paiad.smartagriculture.service.ControlCommandService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,17 +19,12 @@ public class CommandTimeoutTask {
     private ControlCommandService controlCommandService;
 
     /**
-     * 指令超时时间（秒）
-     */
-    private static final int COMMAND_TIMEOUT_SECONDS = 30;
-
-    /**
      * 每10秒检查一次超时指令
      * 将 status=1(已发送) 且发送时间超过30秒的指令标记为 status=4(超时)
      */
     @Scheduled(fixedRate = 10000)
     public void checkCommandTimeout() {
         log.debug("Starting command timeout check...");
-        controlCommandService.markTimeoutCommands(COMMAND_TIMEOUT_SECONDS);
+        controlCommandService.markTimeoutCommands(CommandConstants.COMMAND_TIMEOUT_SECONDS);
     }
 }
