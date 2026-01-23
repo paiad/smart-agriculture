@@ -19,4 +19,15 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
                 .set(Device::getOnline, 1)
                 .update();
     }
+
+    @Override
+    public void updateRunningState(String deviceId, Integer running) {
+        if (deviceId == null) {
+            return;
+        }
+        lambdaUpdate()
+                .eq(Device::getDeviceId, deviceId)
+                .set(Device::getRunning, running)
+                .update();
+    }
 }

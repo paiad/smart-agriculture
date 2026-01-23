@@ -29,6 +29,7 @@ export interface SendCommandResponse {
   status: number
   statusText: string
   sentAt: string
+  errorMsg?: string
 }
 
 export const controlApi = {

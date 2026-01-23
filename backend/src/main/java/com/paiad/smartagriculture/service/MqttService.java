@@ -222,6 +222,20 @@ public class MqttService implements MqttCallback {
             cmd.setErrorMsg(errorMsg);
         }
         controlCommandService.updateById(cmd);
+
+        // 如果指令执行成功，更新设备的 running 状态
+        if (Boolean.TRUE.equals(success)) {
+            String command = cmd.getCommand();
+            if ("ON".equalsIgnoreCase(command)) {
+                deviceService.updateRunningState(deviceId, 1);
+            } else if ("OFF".equalsIgnoreCase(command)) {
+                deviceService.updateRunningState(deviceId, 0);
+            } else if ("RESTART".equalsIgnoreCase(command)) {
+                // 重启后默认变为运行状态
+                deviceService.updateRunningState(deviceId, 1);
+            }
+        }
+
         log.info("ACK 处理完成: requestId={}, success={}", requestId, success);
     }
 

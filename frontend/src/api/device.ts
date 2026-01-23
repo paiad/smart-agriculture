@@ -12,6 +12,7 @@ export interface Device {
   locationDesc?: string
   status?: number        // 0停用 1启用 2故障 3维护
   online?: number        // 0离线 1在线
+  running?: number       // 0待机 1工作中
   lastSeenAt?: string
   lastDataAt?: string
   vendor?: string

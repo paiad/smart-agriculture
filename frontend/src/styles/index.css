@@ -5,6 +5,38 @@
   box-sizing: border-box;
 }
 
+/* 彻底杀灭所有默认边框和黑框 */
+* {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+*:focus,
+*:active,
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important; /* 全局禁用阴影，防止某些浏览器阴影看起来像边框 */
+  border: none !important;
+}
+
+button, 
+input, 
+textarea, 
+select {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0 !important;
+  padding: 0;
+}
+
 html,
 body {
   height: 100%;

@@ -66,6 +66,12 @@ public class Device implements Serializable {
     private Integer online;
 
     /**
+     * 运行状态:0待机 1工作中
+     */
+    @Schema(description = "运行状态: 0待机 1工作中", accessMode = Schema.AccessMode.READ_ONLY)
+    private Integer running;
+
+    /**
      * 最后心跳/最后在线时间
      */
     private LocalDateTime lastSeenAt;

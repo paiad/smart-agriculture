@@ -68,6 +68,12 @@
                      <span class="text-[10px] text-slate-400 font-mono mt-0.5">{{ device.deviceId }}</span>
                   </div>
                 </div>
+                <!-- Running Status Badge -->
+                <div v-if="device.online === 1" 
+                     :class="['px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border', 
+                        device.running === 1 ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-100']">
+                  {{ device.running === 1 ? 'Working' : 'Standby' }}
+                </div>
               </div>
               
               <!-- Mini Metrics -->
@@ -179,12 +185,17 @@ let chartInstance: echarts.ECharts | null = null
 // Computed: Search & Sort
 const devices = computed(() => {
   return [...rawDevices.value].sort((a, b) => {
-    // Priority: Online > Offline
+    // 1. Priority: Sensors first
+    const aIsSensor = a.deviceType?.includes('SENSOR') || a.deviceType?.includes('WEATHER') ? 1 : 0
+    const bIsSensor = b.deviceType?.includes('SENSOR') || b.deviceType?.includes('WEATHER') ? 1 : 0
+    if (aIsSensor !== bIsSensor) return bIsSensor - aIsSensor
+
+    // 2. Secondary: Online > Offline
     const aOnline = a.online === 1 ? 1 : 0
     const bOnline = b.online === 1 ? 1 : 0
     if (aOnline !== bOnline) return bOnline - aOnline
     
-    // Secondary: Name or ID
+    // 3. Tertiary: Name or ID
     const aName = a.name || a.deviceId
     const bName = b.name || b.deviceId
     return aName.localeCompare(bName)
@@ -321,40 +332,10 @@ const handleResize = () => {
     chartInstance?.resize()
 }
 
-const generateMockHistory = () => {
-    const now = new Date()
-    const data = []
-    
-    let baseValue = 0
-    let variance = 0
-    if (currentMetric.value === 'temperature') { baseValue = 24; variance = 3; }
-    if (currentMetric.value === 'humidity') { baseValue = 55; variance = 10; }
-    if (currentMetric.value === 'illuminance') { baseValue = 800; variance = 200; }
-
-    let value = baseValue
-    
-    for (let i = 0; i < 60; i++) {
-        const time = new Date(now.getTime() - (59 - i) * 60 * 1000)
-        const randomChange = (Math.random() - 0.5) * (variance / 5)
-        value += randomChange
-        
-        if(currentMetric.value === 'humidity') value = Math.max(0, Math.min(100, value))
-        
-        data.push({
-            name: time.toString(),
-            value: [
-                [time.getHours(), time.getMinutes()].map(pad).join(':'),
-                value.toFixed(1)
-            ]
-        })
-    }
-    return data
-}
-
 const pad = (n: number) => n < 10 ? `0${n}` : n
 
 // inside updateChart:
-const updateChart = () => {
+const updateChart = async () => {
     if (!chartInstance) {
         initChart() // Try init if null
     }
@@ -380,9 +361,31 @@ const updateChart = () => {
     chartInstance.resize()
 
     const metricConfig = metrics.find(m => m.key === currentMetric.value)!
-    const data = generateMockHistory()
-    const xData = data.map(item => item.value[0])
-    const yData = data.map(item => item.value[1])
+    
+    let chartData: { name: string, value: [string, string] }[] = []
+    
+    try {
+        // Fetch real history from backend (last 60 records)
+        const res = await envDataApi.getPage(1, 60, selectedDevice.value.deviceId)
+        const records = (res.records || []).reverse() // Order by time ascending
+        
+        chartData = records.map(record => {
+            const time = new Date(record.ts)
+            const val = record[currentMetric.value as keyof typeof record]
+            return {
+                name: time.toString(),
+                value: [
+                    [time.getHours(), time.getMinutes(), time.getSeconds()].map(pad).join(':'),
+                    Number(val).toFixed(2)
+                ]
+            }
+        })
+    } catch (e) {
+        console.error("Failed to fetch historical data for chart", e)
+    }
+
+    const xData = chartData.map(item => item.value[0])
+    const yData = chartData.map(item => item.value[1])
 
     const option = {
         grid: {
@@ -449,7 +452,7 @@ const updateChart = () => {
         ]
     }
     
-    chartInstance.setOption(option, true) // merge: false (true here to not merge but replace) -> second arg is notMerge
+    chartInstance.setOption(option, true) 
 }
 
 // Watchers
