@@ -58,7 +58,16 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, _from, next) => {
   document.title = `${to.meta.title || '首页'} - 智慧农业平台`
-  next()
+  
+  const token = localStorage.getItem('token')
+
+  if (!token && to.path !== '/login') {
+    next('/login')
+  } else if (token && to.path === '/login') {
+    next('/')
+  } else {
+    next()
+  }
 })
 
 export default router
