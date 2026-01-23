@@ -29,25 +29,25 @@
       >
         <!-- Group Header -->
         <div 
-          class="px-4 py-3 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors select-none"
+          class="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors select-none"
           @click="toggleGroup(group.deviceId)"
         >
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500">
+                <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
                     <div class="i-solar-bell-bing-bold-duotone text-lg"></div>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-bold text-slate-800 text-sm">{{ group.deviceName }}</span>
-                        <span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[11px] font-mono font-medium border border-indigo-100/50">
+                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[11px] font-mono font-medium">
                             {{ group.deviceId }}
                         </span>
                     </div>
                     <div class="flex gap-1 mt-1.5">
-                       <span class="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-bold border border-red-100">
+                       <span class="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-bold">
                           {{ group.alarms.length }} 异常指标
                        </span>
-                       <span v-if="group.totalCount > group.alarms.length" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-medium border border-slate-200">
+                       <span v-if="group.totalCount > group.alarms.length" class="px-2 py-0.5 rounded-full bg-slate-50 text-slate-400 text-[10px] font-medium">
                           {{ group.totalCount - group.alarms.length }} 历史记录
                        </span>
                     </div>

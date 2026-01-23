@@ -436,15 +436,10 @@ const updateChart = () => {
                 lineStyle: {
                     width: 3,
                     color: metricConfig.color,
-                    shadowColor: metricConfig.color + '40', // 25% opacity
-                    shadowBlur: 10,
-                    shadowOffsetY: 5
                 },
                 areaStyle: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: metricConfig.color + '26' }, // 15% opacity
-                        { offset: 1, color: metricConfig.color + '00' }  // 0% opacity
-                    ])
+                    opacity: 0.05,
+                    color: metricConfig.color
                 },
                 emphasis: {
                      focus: 'series'

@@ -1,7 +1,7 @@
 <template>
   <div class="h-screen w-screen flex bg-slate-50">
     <!-- Sidebar -->
-    <aside class="w-[240px] bg-white border-r border-slate-200 flex flex-col">
+    <aside class="w-[180px] bg-white border-r border-slate-200 flex flex-col">
       <!-- Logo -->
       <div class="h-16 flex items-center px-5 border-b border-slate-100">
         <div
@@ -13,7 +13,7 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 p-3 space-y-1">
+      <nav class="flex-1 px-3 py-4 space-y-1">
         <router-link
           v-for="item in menuItems"
           :key="item.path"
@@ -23,37 +23,39 @@
         >
           <div
             @click="navigate"
-            class="sidebar-item"
-            :class="{
-              'sidebar-item-active':
-                item.path === '/' ? isExactActive : isActive,
-            }"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 group"
+            :class="[
+              (item.path === '/' ? isExactActive : isActive)
+                ? 'bg-slate-900 text-white shadow-md shadow-slate-200'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900',
+            ]"
           >
-            <div :class="item.icon" class="w-5 h-5"></div>
-            <span class="text-sm">{{ item.title }}</span>
+            <div :class="item.icon" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110"></div>
+            <span class="text-sm font-medium">{{ item.title }}</span>
           </div>
         </router-link>
       </nav>
     </aside>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
       <!-- Header -->
       <header
-        class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6"
+        class="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 shrink-0 sticky top-0 z-20"
       >
         <div class="flex items-center gap-2 text-sm">
-          <span class="text-slate-700 font-medium">{{ route.meta.title }}</span>
+           <div class="text-slate-400">/</div>
+          <span class="text-slate-800 font-semibold tracking-tight">{{ route.meta.title || 'Dashboard' }}</span>
         </div>
         <div class="flex items-center gap-4">
           <!-- User Profile -->
           <div
-            class="flex items-center gap-3 hover:bg-slate-50 py-1 px-2 rounded-lg cursor-pointer transition-colors"
+            class="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-sm cursor-pointer transition-all duration-200"
           >
             <el-avatar
               :size="32"
               :src="userInfo?.avatar"
-              class="bg-brand-100 text-brand-600 text-sm"
+              class="!bg-indigo-600 text-white text-xs font-bold border-2 border-white"
             >
               {{
                 (
@@ -63,24 +65,24 @@
                 ).toUpperCase()
               }}
             </el-avatar>
-            <div class="flex flex-col items-start min-w-0">
+            <div class="flex flex-col items-start min-w-0 pr-2">
               <span
-                class="text-sm font-medium text-slate-800 truncate leading-tight"
+                class="text-xs font-bold text-slate-700 truncate leading-tight"
               >
                 {{
                   userInfo?.nickname ||
                   userInfo?.username ||
                   userInfo?.phone ||
-                  "加载中..."
+                  "User"
                 }}
               </span>
-              <span class="text-[10px] text-slate-400 leading-tight">
-                {{ userInfo?.identity || "普通用户" }}
+              <span class="text-[10px] text-slate-400 font-medium leading-tight">
+                {{ userInfo?.identity || "Admin" }}
               </span>
             </div>
           </div>
 
-          <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
+          <div class="h-6 w-[1px] bg-slate-200/60 mx-1"></div>
 
           <div class="flex items-center gap-2">
             <div
@@ -105,8 +107,12 @@
       </header>
 
       <!-- Page Content -->
-      <main class="flex-1 overflow-auto p-6">
-        <RouterView />
+      <main class="flex-1 overflow-auto p-6 md:p-8">
+        <RouterView v-slot="{ Component }">
+           <transition name="fade-slight" mode="out-in">
+             <component :is="Component" />
+           </transition>
+        </RouterView>
       </main>
     </div>
   </div>
