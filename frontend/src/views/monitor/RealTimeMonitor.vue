@@ -10,7 +10,7 @@
           <div class="flex flex-col h-full justify-between relative z-10">
             <div class="flex items-center justify-between mb-4">
               <span class="text-[13px] font-medium text-slate-500 tracking-wide">{{ stat.label }}</span>
-              <div :class="`w-9 h-9 rounded-full flex items-center justify-center bg-opacity-10 transition-transform group-hover:scale-110 ${stat.iconBg}`">
+              <div :class="`w-9 h-9 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${stat.iconBg}`">
                 <div :class="stat.icon" class="text-lg"></div>
               </div>
             </div>
@@ -29,7 +29,7 @@
       </div>
 
       <!-- Main Layout Grid -->
-      <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-280px)]">
         
         <!-- Left: Device Status Panel -->
         <div class="lg:col-span-3 flex flex-col bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-white/60 overflow-hidden h-full">
@@ -42,24 +42,28 @@
             </div>
           </div>
           
-          <div class="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#FAFAFA]">
+          <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F8FAFC] custom-scrollbar">
             <div 
               v-for="device in devices" 
               :key="device.id"
               @click="selectDevice(device)"
               :class="[
-                'p-4 rounded-xl border transition-all duration-200 cursor-pointer relative group',
+                'p-4 rounded-xl border transition-all duration-300 cursor-pointer relative group',
                 selectedDevice?.deviceId === device.deviceId 
-                  ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-black/5 z-10' 
-                  : 'bg-white border-transparent hover:bg-white hover:shadow-sm'
+                  ? 'bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] ring-1 ring-brand-100 border-brand-200 z-10 scale-[1.02]' 
+                  : 'bg-white border-transparent shadow-sm hover:shadow-md hover:scale-[1.01]',
+                device.online !== 1 ? 'opacity-60 grayscale-[0.8] hover:grayscale-0 hover:opacity-100' : ''
               ]"
             >
               <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-2.5">
-                  <div :class="['w-2 h-2 rounded-full shadow-sm', device.status === 1 ? 'bg-[#34C759]' : 'bg-slate-300']"></div>
-                  <div class="flex flex-col">
-                     <span class="font-semibold text-[#1D1D1F] text-[13px] leading-tight truncate max-w-[110px]" :title="device.deviceName">
-                        {{ device.deviceName }}
+                <div class="flex items-center gap-3">
+                  <div class="relative">
+                    <div :class="['w-2.5 h-2.5 rounded-full shadow-sm', device.online === 1 ? 'bg-[#34C759]' : 'bg-slate-300']"></div>
+                    <div v-if="device.online === 1" class="absolute inset-0 rounded-full bg-[#34C759] animate-ping opacity-30"></div>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                     <span class="font-bold text-slate-800 text-sm leading-tight truncate max-w-[120px]" :title="device.name || device.deviceId">
+                        {{ device.name || device.deviceId }}
                      </span>
                      <span class="text-[10px] text-slate-400 font-mono mt-0.5">{{ device.deviceId }}</span>
                   </div>
@@ -67,24 +71,29 @@
               </div>
               
               <!-- Mini Metrics -->
-              <div class="grid grid-cols-2 gap-2">
-                 <div class="bg-slate-50 rounded-lg px-2.5 py-2">
-                   <div class="text-[10px] text-slate-400 mb-0.5">温度</div>
-                   <div class="text-[13px] font-medium text-slate-700 font-mono tracking-tight">
-                     {{ deviceDataMap[device.deviceId]?.temperature ?? '--' }}°
+              <div v-if="device.deviceType?.includes('SENSOR')" class="grid grid-cols-2 gap-2">
+                 <div class="bg-indigo-50/50 rounded-lg px-3 py-2 border border-indigo-100/50">
+                   <div class="text-[10px] text-indigo-400 mb-0.5 font-medium">温度</div>
+                   <div class="text-[14px] font-bold text-indigo-600 font-mono tracking-tight flex items-baseline gap-0.5">
+                     {{ deviceDataMap[device.deviceId]?.temperature ?? '--' }} <span class="text-[10px] font-normal opacity-70">°C</span>
                    </div>
                  </div>
-                 <div class="bg-slate-50 rounded-lg px-2.5 py-2">
-                   <div class="text-[10px] text-slate-400 mb-0.5">湿度</div>
-                   <div class="text-[13px] font-medium text-slate-700 font-mono tracking-tight">
-                     {{ deviceDataMap[device.deviceId]?.humidity ?? '--' }}%
+                 <div class="bg-sky-50/50 rounded-lg px-3 py-2 border border-sky-100/50">
+                   <div class="text-[10px] text-sky-400 mb-0.5 font-medium">湿度</div>
+                   <div class="text-[14px] font-bold text-sky-600 font-mono tracking-tight flex items-baseline gap-0.5">
+                     {{ deviceDataMap[device.deviceId]?.humidity ?? '--' }} <span class="text-[10px] font-normal opacity-70">%</span>
                    </div>
                  </div>
               </div>
+
+               <!-- Empty state for non-sensor devices -->
+               <div v-else class="py-2 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-100 border-dashed">
+                 <span class="text-[11px] text-slate-400">执行设备 (无环境数据)</span>
+               </div>
               
                <!-- Selection indicator -->
                <div v-if="selectedDevice?.deviceId === device.deviceId" 
-                    class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#007AFF] rounded-r-lg"></div>
+                    class="absolute left-0 top-6 bottom-6 w-1 bg-brand-500 rounded-r-full shadow-[2px_0_8px_rgba(59,130,246,0.3)]"></div>
             </div>
           </div>
         </div>
@@ -94,24 +103,24 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 shrink-0">
             <div>
               <div class="flex items-center gap-3">
-                <h2 class="text-lg font-semibold text-[#1D1D1F]">环境趋势分析</h2>
-                <div v-if="selectedDevice" class="px-2.5 py-0.5 bg-[#F2F2F7] text-[#86868B] text-[11px] rounded-md font-medium">
-                  {{ selectedDevice.deviceName }}
+                <h2 class="text-lg font-bold text-slate-800 tracking-tight">环境趋势分析</h2>
+                <div v-if="selectedDevice" class="px-3 py-1 bg-brand-50 text-brand-600 text-[12px] rounded-full font-medium border border-brand-100/50 animate-fade-in">
+                  {{ selectedDevice.name || selectedDevice.deviceId }}
                 </div>
               </div>
             </div>
             
             <!-- Apple-style Segmented Control -->
-            <div class="flex items-center p-1 bg-[#767680]/10 rounded-lg h-9">
+            <div class="flex items-center p-1 bg-slate-100/80 rounded-xl h-10">
               <button 
                 v-for="m in metrics" 
                 :key="m.key"
                 @click="currentMetric = m.key"
                 :class="[
-                  'px-4 h-[28px] text-[13px] font-medium rounded-[6px] transition-all duration-200 flex items-center justify-center border-none outline-none focus:outline-none',
+                  'px-4 h-[32px] text-[13px] font-medium rounded-[8px] transition-all duration-300 flex items-center justify-center border-none outline-none focus:outline-none',
                   currentMetric === m.key 
-                    ? 'bg-white text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)]' 
-                    : 'text-[#636366] hover:text-black bg-transparent'
+                    ? 'bg-white text-brand-600 shadow-[0_2px_8px_rgba(0,0,0,0.08)] scale-100' 
+                    : 'text-slate-500 hover:text-slate-700 bg-transparent hover:bg-black/5 scale-95'
                 ]"
               >
                 {{ m.label }}
@@ -119,18 +128,32 @@
             </div>
           </div>
 
-          <div class="flex-1 w-full relative min-h-0">
+          <div class="flex-1 w-full relative min-h-0 bg-gradient-to-b from-slate-50/50 to-white rounded-xl border border-slate-100/50 p-4">
              <!-- Wrapper for chart to ensure strict layout -->
-             <div class="absolute inset-0 w-full h-full">
+             <div class="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)]">
                 <div ref="chartRef" class="w-full h-full"></div>
              </div>
 
-             <!-- Empty State overlay -->
-             <div v-if="!selectedDevice" class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm z-20">
-               <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-4 shadow-inner">
-                 <i class="i-solar-chart-square-linear text-3xl text-slate-300"></i>
+             <!-- Empty State / Offline / Non-sensor Overlay -->
+             <div v-if="chartOverlayState !== 'READY'" class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm z-50 rounded-xl transition-all duration-300">
+               <div :class="['w-24 h-24 rounded-full flex items-center justify-center mb-5 shadow-inner border border-slate-100', 
+                  chartOverlayState === 'OFFLINE' ? 'bg-slate-100/50' : 
+                  chartOverlayState === 'NOT_SENSOR' ? 'bg-orange-50' : 'bg-slate-50']">
+                 <div :class="['text-4xl', 
+                    chartOverlayState === 'OFFLINE' ? 'i-solar-cloud-broken-bold text-slate-400' :
+                    chartOverlayState === 'NOT_SENSOR' ? 'i-solar-forbidden-circle-linear text-orange-300' : 
+                    'i-solar-chart-square-linear text-slate-300']"></div>
                </div>
-               <p class="text-slate-500 font-medium">请选择一个设备查看趋势</p>
+               <p class="text-slate-600 font-medium text-lg">
+                 {{ chartOverlayState === 'EMPTY' ? '请选择一个设备查看趋势' : 
+                    chartOverlayState === 'OFFLINE' ? '设备已离线' :
+                    '该设备无环境监测数据' }}
+               </p>
+               <p class="text-slate-400 text-sm mt-2">
+                 {{ chartOverlayState === 'EMPTY' ? '点击左侧列表中的设备卡片' : 
+                    chartOverlayState === 'OFFLINE' ? '离线状态下无法查看实时环境数据' :
+                    '只有传感器设备支持环境趋势分析' }}
+               </p>
              </div>
           </div>
         </div>
@@ -147,16 +170,31 @@ import { envDataApi, type EnvData } from '@/api/envData'
 import * as echarts from 'echarts'
 
 // --- State ---
-const devices = ref<Device[]>([])
+const rawDevices = ref<Device[]>([])
 const deviceDataMap = ref<Record<string, EnvData>>({})
 const selectedDevice = ref<Device | null>(null)
 const chartRef = ref<HTMLElement | null>(null)
 let chartInstance: echarts.ECharts | null = null
 
+// Computed: Search & Sort
+const devices = computed(() => {
+  return [...rawDevices.value].sort((a, b) => {
+    // Priority: Online > Offline
+    const aOnline = a.online === 1 ? 1 : 0
+    const bOnline = b.online === 1 ? 1 : 0
+    if (aOnline !== bOnline) return bOnline - aOnline
+    
+    // Secondary: Name or ID
+    const aName = a.name || a.deviceId
+    const bName = b.name || b.deviceId
+    return aName.localeCompare(bName)
+  })
+})
+
 const metrics = [
-  { key: 'temperature', label: '温度', unit: '°C', color: '#FF9500' }, 
-  { key: 'humidity', label: '湿度', unit: '%', color: '#007AFF' },
-  { key: 'illuminance', label: '光照', unit: 'Lux', color: '#FFCC00' },
+  { key: 'temperature', label: '温度', unit: '°C', color: '#6366f1' }, 
+  { key: 'humidity', label: '湿度', unit: '%', color: '#0ea5e9' },
+  { key: 'illuminance', label: '光照', unit: 'Lux', color: '#f59e0b' },
 ] as const
 
 const currentMetric = ref<typeof metrics[number]['key']>('temperature')
@@ -185,37 +223,44 @@ const stats = computed(() => {
   return [
     { 
       label: '平均温度', value: tAvg, unit: '°C', 
-      icon: 'i-solar-thermometer-bold', iconBg: 'bg-orange-500 text-orange-600', 
+      icon: 'i-solar-thermometer-bold', iconBg: 'bg-indigo-500 text-white shadow-indigo-200',
       statusColor: 'bg-[#34C759]', statusText: 'Normal'
     },
     { 
       label: '平均湿度', value: hAvg, unit: '%', 
-      icon: 'i-solar-waterdrops-bold', iconBg: 'bg-blue-500 text-blue-600', 
+      icon: 'i-solar-waterdrops-bold', iconBg: 'bg-sky-500 text-white shadow-sky-200', 
       statusColor: 'bg-[#34C759]', statusText: 'Normal'
     },
     { 
       label: '平均光照', value: lAvg, unit: 'Lux', 
-      icon: 'i-solar-sun-bold', iconBg: 'bg-yellow-500 text-yellow-600', 
+      icon: 'i-solar-sun-bold', iconBg: 'bg-amber-500 text-white shadow-amber-200', 
       statusColor: 'bg-[#34C759]', statusText: 'Normal'
     },
     { 
       label: 'CO2 浓度', value: co2Avg, unit: 'ppm', 
-      icon: 'i-solar-cloud-bold', iconBg: 'bg-teal-500 text-teal-600', 
+      icon: 'i-solar-cloud-bold', iconBg: 'bg-emerald-500 text-white shadow-emerald-200', 
       statusColor: 'bg-[#34C759]', statusText: 'Normal'
     },
   ]
 })
 
+// Computed: Chart Overlay State
+const chartOverlayState = computed(() => {
+  if (!selectedDevice.value) return 'EMPTY'
+  if (selectedDevice.value.online !== 1) return 'OFFLINE'
+  if (!selectedDevice.value.deviceType?.includes('SENSOR')) return 'NOT_SENSOR'
+  return 'READY'
+})
+
+
 
 // --- Initial Data Fetching ---
 const fetchData = async () => {
     try {
-        // Fetch devices (reduced page size for performance if needed, but 100 ok for now)
         const res = await deviceApi.getPage(1, 100)
-        devices.value = res.records || []
+        rawDevices.value = res.records || []
         
-        // Fetch data for sensors
-        for (const d of devices.value) {
+        for (const d of rawDevices.value) {
            if (d.deviceType?.includes('SENSOR')) {
                const data = await envDataApi.getLatest(d.deviceId)
                if(data) {
@@ -224,15 +269,16 @@ const fetchData = async () => {
            }
         }
 
-        // Auto-select first available sensor
         if (!selectedDevice.value && devices.value.length > 0) {
-            const firstSensor = devices.value.find(d => d.deviceType?.includes('SENSOR'))
-            if (firstSensor) {
-                selectDevice(firstSensor)
+            const firstOnlineSensor = devices.value.find(d => d.deviceType?.includes('SENSOR') && d.online === 1)
+            const fallback = devices.value[0]
+            if (firstOnlineSensor) {
+                selectDevice(firstOnlineSensor)
+            } else if (fallback) {
+                selectDevice(fallback)
             }
         }
         
-        // Force chart update after data valid
         nextTick(() => {
            updateChart()
         })
@@ -254,17 +300,14 @@ const selectDevice = (device: Device) => {
 const initChart = () => {
     if (!chartRef.value) return
     
-    // Dispose if exists
     if (chartInstance) {
         chartInstance.dispose()
     }
 
     chartInstance = echarts.init(chartRef.value)
     
-    // Resize observer
     window.addEventListener('resize', handleResize)
     
-    // Initial empty option to prevent blank if data delayed
     chartInstance.setOption({
         title: {
             text: 'Loading...',
@@ -278,12 +321,10 @@ const handleResize = () => {
     chartInstance?.resize()
 }
 
-// Mock data generator for smooth curves (Replace with API history later)
 const generateMockHistory = () => {
     const now = new Date()
     const data = []
     
-    // Base value based on metric
     let baseValue = 0
     let variance = 0
     if (currentMetric.value === 'temperature') { baseValue = 24; variance = 3; }
@@ -293,11 +334,10 @@ const generateMockHistory = () => {
     let value = baseValue
     
     for (let i = 0; i < 60; i++) {
-        const time = new Date(now.getTime() - (59 - i) * 60 * 1000) // Last 60 minutes
+        const time = new Date(now.getTime() - (59 - i) * 60 * 1000)
         const randomChange = (Math.random() - 0.5) * (variance / 5)
         value += randomChange
         
-        // Clamp logic
         if(currentMetric.value === 'humidity') value = Math.max(0, Math.min(100, value))
         
         data.push({
@@ -313,12 +353,20 @@ const generateMockHistory = () => {
 
 const pad = (n: number) => n < 10 ? `0${n}` : n
 
+// inside updateChart:
 const updateChart = () => {
     if (!chartInstance) {
         initChart() // Try init if null
     }
+    // Check if device is selected AND is a sensor
     if (!chartInstance || !selectedDevice.value) return
     
+    // If NOT a sensor, clear chart or do nothing (the overlay covers it)
+    if (!selectedDevice.value.deviceType?.includes('SENSOR')) {
+        chartInstance.clear()
+        return
+    }
+
     // IMPORTANT: Check container size
     const width = chartRef.value?.clientWidth
     const height = chartRef.value?.clientHeight
@@ -338,7 +386,7 @@ const updateChart = () => {
 
     const option = {
         grid: {
-            top: 30,
+            top: 40,
             right: 20,
             bottom: 40,
             left: 50,
@@ -350,7 +398,7 @@ const updateChart = () => {
             borderColor: 'rgba(0,0,0,0.05)',
             textStyle: { color: '#1D1D1F', fontSize: 13 },
             padding: [10, 15],
-            extraCssText: 'box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius: 8px;'
+            extraCssText: 'box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius: 12px;'
         },
         xAxis: {
             type: 'category',
@@ -370,8 +418,8 @@ const updateChart = () => {
         },
         yAxis: {
             type: 'value',
-            splitLine: { lineStyle: { type: 'dashed', color: '#E5E5EA' } },
-            axisLabel: { color: '#86868B', fontSize: 11 }
+            splitLine: { lineStyle: { type: 'dashed', color: '#F1F5F9' } },
+            axisLabel: { color: '#94a3b8', fontSize: 11 }
         },
         series: [
             {
@@ -387,11 +435,14 @@ const updateChart = () => {
                 },
                 lineStyle: {
                     width: 3,
-                    color: metricConfig.color
+                    color: metricConfig.color,
+                    shadowColor: metricConfig.color + '40', // 25% opacity
+                    shadowBlur: 10,
+                    shadowOffsetY: 5
                 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: metricConfig.color + '33' }, // 20% opacity
+                        { offset: 0, color: metricConfig.color + '26' }, // 15% opacity
                         { offset: 1, color: metricConfig.color + '00' }  // 0% opacity
                     ])
                 },
@@ -422,9 +473,9 @@ onMounted(() => {
     }, 500)
     
     // Poll updates - DISABLED for stability
-    // setInterval(() => {
-    //    updateChart() 
-    // }, 5000)
+    setInterval(() => {
+       fetchData() // Poll for new data
+    }, 5000)
 })
 
 onUnmounted(() => {
@@ -435,17 +486,26 @@ onUnmounted(() => {
 
 <style scoped>
 /* Custom scrollbar for device list */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 4px;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
 }
-.overflow-y-auto::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #E5E5EA;
-  border-radius: 4px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 10px;
 }
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #D1D1D6;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
 </style>

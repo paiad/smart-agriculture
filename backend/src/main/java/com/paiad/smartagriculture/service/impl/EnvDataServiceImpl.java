@@ -128,39 +128,42 @@ public class EnvDataServiceImpl extends ServiceImpl<EnvDataMapper, EnvData> impl
     }
 
     private void createAlarm(EnvData envData, AlarmRule rule, BigDecimal value, String message) {
-        // 告警抑制检查：5分钟内同设备同指标不重复告警
-        String suppressionKey = RedisConstants.ALARM_SUPPRESSION_PREFIX
-                + envData.getDeviceId() + ":" + rule.getMetric();
+        // 告警聚合逻辑：查询该设备该规则下是否存在未处理的告警
+        Alarm existingAlarm = alarmService.getOne(new LambdaQueryWrapper<Alarm>()
+                .eq(Alarm::getDeviceId, envData.getDeviceId())
+                .eq(Alarm::getRuleId, rule.getId())
+                .eq(Alarm::getStatus, 0) // 0: 未处理
+                .orderByDesc(Alarm::getTriggeredAt)
+                .last("LIMIT 1"));
 
-        Boolean exists = redisTemplate.hasKey(suppressionKey);
-        if (Boolean.TRUE.equals(exists)) {
-            log.debug("Alarm suppressed for device={}, metric={} (within suppression window)",
+        if (existingAlarm != null) {
+            // 存在未处理告警，更新最新值和时间，而不是创建新记录
+            log.info("Updating existing alarm id={} for device={} metric={}", existingAlarm.getId(),
                     envData.getDeviceId(), rule.getMetric());
-            return;
+
+            existingAlarm.setValue(value);
+            existingAlarm.setTriggeredAt(envData.getTs() != null ? envData.getTs() : LocalDateTime.now());
+            existingAlarm.setMessage(message); // 更新为最新的错误信息
+
+            alarmService.updateById(existingAlarm);
+        } else {
+            // 不存在未处理告警，创建新记录
+            Alarm alarm = Alarm.builder()
+                    .deviceId(envData.getDeviceId())
+                    .metric(rule.getMetric())
+                    .value(value)
+                    .minValue(rule.getMinValue())
+                    .maxValue(rule.getMaxValue())
+                    .level(rule.getLevel())
+                    .status(0) // 0: 未处理
+                    .triggeredAt(envData.getTs() != null ? envData.getTs() : LocalDateTime.now())
+                    .message(message)
+                    .ruleId(rule.getId())
+                    .build();
+
+            alarmService.save(alarm);
+            log.info("Created new alarm for device={} metric={}", envData.getDeviceId(), rule.getMetric());
         }
-
-        // 创建告警记录
-        Alarm alarm = Alarm.builder()
-                .deviceId(envData.getDeviceId())
-                .metric(rule.getMetric())
-                .value(value)
-                .minValue(rule.getMinValue())
-                .maxValue(rule.getMaxValue())
-                .level(rule.getLevel())
-                .status(0) // 0: 未确认
-                .triggeredAt(envData.getTs() != null ? envData.getTs() : LocalDateTime.now())
-                .message(message)
-                .ruleId(rule.getId())
-                .build();
-
-        alarmService.save(alarm);
-
-        // 设置抑制标记，5分钟后过期
-        redisTemplate.opsForValue().set(suppressionKey, "1",
-                java.time.Duration.ofMinutes(RedisConstants.ALARM_SUPPRESSION_TTL_MINUTES));
-
-        log.info("Alarm generated: {} (suppression set for {} minutes)",
-                message, RedisConstants.ALARM_SUPPRESSION_TTL_MINUTES);
     }
 
     private BigDecimal getValueByMetric(EnvData data, String metric) {

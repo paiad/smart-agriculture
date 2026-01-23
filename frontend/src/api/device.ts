@@ -1,14 +1,27 @@
 import { http } from './request'
 
+/**
+ * 设备信息 (与后端 Device POJO 对应)
+ */
 export interface Device {
   id: number
   deviceId: string
-  deviceName: string
-  deviceType: string
-  status: number // 0: Offline, 1: Online
-  location: string
-  lastActiveTime: string
+  deviceType?: string
+  name?: string
+  greenhouseId?: number
+  locationDesc?: string
+  status?: number        // 0停用 1启用 2故障 3维护
+  online?: number        // 0离线 1在线
+  lastSeenAt?: string
+  lastDataAt?: string
+  vendor?: string
+  model?: string
+  fwVersion?: string
+  protocol?: string
   capabilities?: string
+  remark?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface PageResult<T> {

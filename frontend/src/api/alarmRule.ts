@@ -3,16 +3,15 @@ import type { PageResult } from './device'
 
 export interface AlarmRule {
   id: number
+  ruleName?: string
   deviceId?: string
   deviceType?: string
   metric: string
-  condition?: string // Helper field if needed for UI
-  minValue?: number
-  maxValue?: number
+  condition?: string
+  minValue?: number | null
+  maxValue?: number | null
   level: string
-  enabled: number // 0: Disabled, 1: Enabled
-  name?: string // Not in DB but useful for UI description? DB doesn't have name, maybe remove.
-  // Actually checking DB schema: id, device_id, device_type, metric, min_value, max_value, level, enabled 
+  enabled: number
 }
 
 export const alarmRuleApi = {

@@ -43,15 +43,7 @@
         class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6"
       >
         <div class="flex items-center gap-2 text-sm">
-          <span class="text-slate-400">Home</span>
-          <span v-if="route.meta.title !== 'Home'" class="text-slate-300"
-            >/</span
-          >
-          <span
-            v-if="route.meta.title !== 'Home'"
-            class="text-slate-700 font-medium"
-            >{{ route.meta.title }}</span
-          >
+          <span class="text-slate-700 font-medium">{{ route.meta.title }}</span>
         </div>
         <div class="flex items-center gap-4">
           <!-- User Profile -->
